@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+#
+# To run in CLI mode:
+#     docker run --rm -it "$(docker build -q .)" ./predict "Hello world"
+# To run in server mode:
+#     docker run --rm -it -p 8047:8047 "$(docker build -q .)" ./predict
+
+import sys
+
+from cefr_predictor.inference import Model
+model = Model("cefr_predictor/models/xgboost.joblib")
+
+if len(sys.argv) == 2:
+    print(model.predict_decode([sys.argv[1]])[0][0][:2])
+else:
+    from flask import Flask, request
+    app = Flask(__name__)
+    @app.route("/", methods=["POST"])
+    def predict():
+        return model.predict_decode([request.get_data().decode()])[0][0][:2]
+    app.run(host='0.0.0.0', port=8047)
