@@ -5,6 +5,7 @@
 # To run in server mode:
 #     docker run --rm -it -p 8047:8047 "$(docker build -q .)" ./predict
 
+import json
 import sys
 
 from cefr_predictor.inference import Model
@@ -17,5 +18,12 @@ else:
     app = Flask(__name__)
     @app.route("/", methods=["POST"])
     def predict():
-        return model.predict_decode([request.get_data().decode()])[0][0][:2]
+        body = request.get_data().decode()
+        if body and body[0] == "[":
+            return json.dumps([
+                p[:2]
+                for p in model.predict_decode(json.loads(body))[0]
+            ])
+        else:
+            return model.predict_decode([body])[0][0][:2]
     app.run(host='0.0.0.0', port=8047)
