@@ -12,7 +12,7 @@ from cefr_predictor.inference import Model
 model = Model("cefr_predictor/models/xgboost.joblib")
 
 if len(sys.argv) == 2:
-    print(model.predict_decode([sys.argv[1]])[0][0][:2])
+    print(model.predict_decode([sys.argv[1]]))
 else:
     from flask import Flask, request
     app = Flask(__name__)
@@ -20,10 +20,7 @@ else:
     def predict():
         body = request.get_data().decode()
         if body and body[0] == "[":
-            return json.dumps([
-                p[:2]
-                for p in model.predict_decode(json.loads(body))[0]
-            ])
+            return json.dumps(model.predict_decode(json.loads(body)))
         else:
-            return model.predict_decode([body])[0][0][:2]
+            return json.dumps(model.predict_decode([body]))
     app.run(host='0.0.0.0', port=8047)
